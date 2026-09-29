@@ -55,6 +55,7 @@ export interface Product {
   name: string;
   category: 'business-cards' | 'marketing' | 'signs-banners';
   categoryName: string;
+  subCategory?: 'popular' | 'premium' | 'majestic' | 'shape' | string;
   tagline: string;
   description: string;
   pdpCode?: string;

@@ -41,9 +41,9 @@ export const HomePage: React.FC = () => {
       badge: 'Bestseller',
       bgGradient: 'from-slate-100 to-slate-200',
       action: () => {
-        const p = products.find((x) => x.slug === 'dual-raised-business-cards') || products.find((x) => x.category === 'business-cards');
-        if (p) setSelectedProductId(p.id);
-        setCurrentView('configurator');
+        setActiveCategory('business-cards');
+        setCurrentView('catalog');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       },
       renderVisual: () => (
         <div className="relative w-full h-full flex items-center justify-center p-3 bg-gradient-to-br from-slate-50 to-slate-200">

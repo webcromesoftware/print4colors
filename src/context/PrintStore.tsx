@@ -120,7 +120,17 @@ export const PrintProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   // Catalog
   const [products, setProducts] = useState<Product[]>(() => {
     const saved = localStorage.getItem('p4c_products');
-    return saved ? JSON.parse(saved) : INITIAL_PRODUCTS_LIST;
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length >= INITIAL_PRODUCTS_LIST.length) {
+          return parsed;
+        }
+      } catch (e) {
+        // Fall back to INITIAL_PRODUCTS_LIST
+      }
+    }
+    return INITIAL_PRODUCTS_LIST;
   });
   const [templates] = useState<Template[]>(INITIAL_TEMPLATES_LIST);
 

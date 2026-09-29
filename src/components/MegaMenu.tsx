@@ -74,74 +74,74 @@ export const MegaMenu: React.FC<MegaMenuProps> = ({
                   >
                     <div className="flex items-center justify-between">
                       <span className="font-bold text-slate-900 text-xs sm:text-sm group-hover:text-sky-600 transition">
-                        Standard 16pt C2S
+                        Standard Business Cards
                       </span>
                       <span className="text-[10px] bg-slate-100 text-slate-700 font-bold px-1.5 py-0.5 rounded">
                         From $19.99
                       </span>
                     </div>
                     <p className="text-slate-500 text-xs mt-0.5 line-clamp-1">
-                      Heavyweight gloss or matte finish cardstock.
+                      Common sizes, stocks, and finishes.
                     </p>
                   </button>
                 </li>
                 <li>
                   <button
                     onClick={() => {
-                      onSelectProductBySlug('dual-raised-business-cards');
+                      onSelectProductBySlug('suede-business-cards');
                       onClose();
                     }}
                     className="group text-left w-full hover:bg-slate-50 p-2 rounded-lg transition"
                   >
                     <div className="flex items-center justify-between">
                       <span className="font-bold text-slate-900 text-xs sm:text-sm group-hover:text-sky-600 transition">
-                        18pt Suede / Velvet
+                        Suede Business Cards
                       </span>
                       <span className="text-[10px] bg-sky-100 text-sky-800 font-bold px-1.5 py-0.5 rounded">
                         Popular
                       </span>
                     </div>
                     <p className="text-slate-500 text-xs mt-0.5 line-clamp-1">
-                      Ultra-luxurious scuff-resistant soft-touch laminate.
+                      Scuff-resistant velvet laminate.
                     </p>
                   </button>
                 </li>
                 <li>
                   <button
                     onClick={() => {
-                      onSelectProductBySlug('premium-business-cards');
+                      onSelectProductBySlug('silk-business-cards');
                       onClose();
                     }}
                     className="group text-left w-full hover:bg-slate-50 p-2 rounded-lg transition"
                   >
                     <div className="flex items-center justify-between">
                       <span className="font-bold text-slate-900 text-xs sm:text-sm group-hover:text-sky-600 transition">
-                        Silk Matte Laminated
+                        Silk Business Cards
                       </span>
                     </div>
                     <p className="text-slate-500 text-xs mt-0.5 line-clamp-1">
-                      Understated non-glare silky smooth texture.
+                      Sensuous, soft-touch matte laminate.
                     </p>
                   </button>
                 </li>
                 <li>
                   <button
                     onClick={() => {
-                      onSelectProductBySlug('premium-business-cards');
+                      onSelectProductBySlug('painted-edge-business-cards');
                       onClose();
                     }}
                     className="group text-left w-full hover:bg-slate-50 p-2 rounded-lg transition"
                   >
                     <div className="flex items-center justify-between">
                       <span className="font-bold text-slate-900 text-xs sm:text-sm group-hover:text-sky-600 transition">
-                        18pt Recycled Kraft
+                        Painted Edge Business Cards
                       </span>
-                      <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.5 rounded">
-                        Eco
+                      <span className="text-[10px] bg-rose-100 text-rose-800 font-bold px-1.5 py-0.5 rounded">
+                        32PT
                       </span>
                     </div>
                     <p className="text-slate-500 text-xs mt-0.5 line-clamp-1">
-                      Artisanal earthy natural brown fiberboard.
+                      Ultra-thick with bright colored sides.
                     </p>
                   </button>
                 </li>
@@ -167,123 +167,126 @@ export const MegaMenu: React.FC<MegaMenuProps> = ({
                   >
                     <div className="flex items-center justify-between">
                       <span className="font-bold text-slate-900 text-xs sm:text-sm group-hover:text-amber-600 transition">
-                        Dual Raised Foil & UV
+                        Dual Raised Business Cards
                       </span>
                       <span className="text-[10px] bg-amber-400 text-slate-950 font-black px-1.5 py-0.5 rounded">
                         HOT
                       </span>
                     </div>
                     <p className="text-slate-500 text-xs mt-0.5 line-clamp-1">
-                      Tactile 50μ raised metallic foil and 3D spot UV.
+                      Impressive dual finish with tactile foil and spot UV.
                     </p>
                   </button>
                 </li>
                 <li>
                   <button
                     onClick={() => {
-                      onSelectProductBySlug('premium-business-cards');
+                      onSelectProductBySlug('raised-spot-uv-business-cards');
                       onClose();
                     }}
                     className="group text-left w-full hover:bg-slate-50 p-2 rounded-lg transition"
                   >
                     <div className="flex items-center justify-between">
                       <span className="font-bold text-slate-900 text-xs sm:text-sm group-hover:text-sky-600 transition">
-                        Liquid Gold / Silver Foil
+                        Raised Spot UV Cards
                       </span>
                     </div>
                     <p className="text-slate-500 text-xs mt-0.5 line-clamp-1">
-                      Gleaming cold metallic highlights.
+                      Elegant emphasis you can see and feel.
                     </p>
                   </button>
                 </li>
                 <li>
                   <button
                     onClick={() => {
-                      onSelectProductBySlug('premium-business-cards');
+                      onSelectProductBySlug('raised-foil-business-cards');
                       onClose();
                     }}
                     className="group text-left w-full hover:bg-slate-50 p-2 rounded-lg transition"
                   >
                     <div className="flex items-center justify-between">
                       <span className="font-bold text-slate-900 text-xs sm:text-sm group-hover:text-sky-600 transition">
-                        Holographic Laser Foil
+                        Raised Foil Business Cards
                       </span>
                     </div>
                     <p className="text-slate-500 text-xs mt-0.5 line-clamp-1">
-                      Multi-color shifting rainbow metallic shimmer.
+                      Foil embossed on soft-touch laminate.
                     </p>
                   </button>
                 </li>
                 <li>
                   <button
                     onClick={() => {
-                      onSelectProductBySlug('premium-business-cards');
+                      onSelectProductBySlug('black-edge-business-cards');
                       onClose();
                     }}
                     className="group text-left w-full hover:bg-slate-50 p-2 rounded-lg transition"
                   >
                     <div className="flex items-center justify-between">
                       <span className="font-bold text-slate-900 text-xs sm:text-sm group-hover:text-sky-600 transition">
-                        20pt Waterproof Plastic
+                        Black Edge Business Cards
+                      </span>
+                      <span className="text-[10px] bg-slate-950 text-white font-mono px-1 rounded">
+                        34PT
                       </span>
                     </div>
                     <p className="text-slate-500 text-xs mt-0.5 line-clamp-1">
-                      Tear-proof frosted synthetic material.
+                      Bright white layers on solid black core.
                     </p>
                   </button>
                 </li>
               </ul>
             </div>
 
-            {/* Column 3: Shapes & Finishing (3 cols) */}
+            {/* Column 3: Shapes & Specialty (3 cols) */}
             <div className="lg:col-span-3 space-y-4">
               <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
                 <Layers className="w-4 h-4 text-purple-600" />
                 <h3 className="font-extrabold text-slate-900 text-xs uppercase tracking-wider">
-                  Shapes & Options
+                  Shapes & Specialty
                 </h3>
               </div>
               <ul className="space-y-3">
                 <li>
                   <button
                     onClick={() => {
-                      onSelectProductBySlug('standard-business-cards');
+                      onSelectProductBySlug('plastic-business-cards');
                       onClose();
                     }}
                     className="group text-left w-full hover:bg-slate-50 p-2 rounded-lg transition"
                   >
                     <span className="font-bold text-slate-900 text-xs sm:text-sm group-hover:text-sky-600 transition block">
-                      Standard US (2" x 3.5")
+                      Plastic Business Cards (Frosted/Clear)
                     </span>
-                    <p className="text-slate-500 text-xs mt-0.5">Classic pocket wallet dimensions.</p>
+                    <p className="text-slate-500 text-xs mt-0.5">Strong, versatile, and durable 20pt.</p>
                   </button>
                 </li>
                 <li>
                   <button
                     onClick={() => {
-                      onSelectProductBySlug('dual-raised-business-cards');
+                      onSelectProductBySlug('leaf-business-cards');
                       onClose();
                     }}
                     className="group text-left w-full hover:bg-slate-50 p-2 rounded-lg transition"
                   >
                     <span className="font-bold text-slate-900 text-xs sm:text-sm group-hover:text-sky-600 transition block">
-                      Square Cards (2.5" x 2.5")
+                      Leaf & Oval Business Cards
                     </span>
-                    <p className="text-slate-500 text-xs mt-0.5">Contemporary artistic square crop.</p>
+                    <p className="text-slate-500 text-xs mt-0.5">Distinctive die-cut curved shapes.</p>
                   </button>
                 </li>
                 <li>
                   <button
                     onClick={() => {
-                      onSelectProductBySlug('standard-business-cards');
+                      onSelectProductBySlug('circle-business-cards');
                       onClose();
                     }}
                     className="group text-left w-full hover:bg-slate-50 p-2 rounded-lg transition"
                   >
                     <span className="font-bold text-slate-900 text-xs sm:text-sm group-hover:text-sky-600 transition block">
-                      1/4" Rounded Corners
+                      Circle Business Cards
                     </span>
-                    <p className="text-slate-500 text-xs mt-0.5">Die-cut rounded smooth edges.</p>
+                    <p className="text-slate-500 text-xs mt-0.5">A fun, friendly way to stand out.</p>
                   </button>
                 </li>
                 <li className="pt-1">
@@ -295,7 +298,7 @@ export const MegaMenu: React.FC<MegaMenuProps> = ({
                     }}
                     className="text-xs font-bold text-sky-600 hover:text-sky-700 hover:underline flex items-center gap-1.5"
                   >
-                    <span>View All Business Cards (12+ Options)</span>
+                    <span>View All Business Cards (20 Types) →</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </button>
                 </li>

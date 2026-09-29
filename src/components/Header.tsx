@@ -381,7 +381,12 @@ export const Header: React.FC = () => {
               className="relative"
             >
               <button
-                onClick={() => handleMenuClick('cards')}
+                onClick={() => {
+                  setActiveCategory('business-cards');
+                  setCurrentView('catalog');
+                  setActiveMegaMenu(null);
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
                 className={`flex items-center gap-1.5 px-3.5 py-2.5 rounded-md transition cursor-pointer ${
                   activeMegaMenu === 'cards'
                     ? 'text-sky-600 bg-sky-50 font-bold'
@@ -390,6 +395,10 @@ export const Header: React.FC = () => {
               >
                 <span>Business Cards</span>
                 <ChevronDown
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleMenuClick('cards');
+                  }}
                   className={`w-3.5 h-3.5 transition-transform duration-200 ${
                     activeMegaMenu === 'cards' ? 'rotate-180 text-sky-600' : 'text-slate-400'
                   }`}
@@ -554,7 +563,12 @@ export const Header: React.FC = () => {
             activeMenu={activeMegaMenu}
             onClose={() => setActiveMegaMenu(null)}
             onSelectProductBySlug={handleSelectProductBySlug}
-            onSelectCategory={setActiveCategory}
+            onSelectCategory={(category) => {
+              setActiveCategory(category);
+              setCurrentView('catalog');
+              setActiveMegaMenu(null);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
             onNavigate={setCurrentView}
             onOpenModal={(modal) => {
               if (modal === 'quote') setIsQuoteModalOpen(true);
