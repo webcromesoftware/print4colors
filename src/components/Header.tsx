@@ -8,21 +8,19 @@ import {
   ChevronDown,
   ShieldCheck,
   CheckCircle2,
-  FileCheck,
-  Package,
-  Sparkles,
   X,
-  Truck
+  Truck,
+  Menu as MenuIcon
 } from 'lucide-react';
 import { usePrintStore } from '../context/PrintStore';
 import { Print4ColorsLogo } from './Print4ColorsLogo';
+import { MegaMenu } from './MegaMenu';
 
 export const Header: React.FC = () => {
   const {
     currentView,
     setCurrentView,
     cartTotalCount,
-    cartSubtotal,
     setIsCartDrawerOpen,
     isAdmin,
     setIsAdmin,
@@ -36,24 +34,64 @@ export const Header: React.FC = () => {
     setIsGuidelinesOpen,
     searchQuery,
     setSearchQuery,
-    activeCategory,
     setActiveCategory,
   } = usePrintStore();
 
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
-  const searchRef = useRef<HTMLDivElement>(null);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [mobileExpandedSection, setMobileExpandedSection] = useState<string | null>(null);
 
-  // Close search and dropdowns on click outside
+  // Mega Menu Active State & Graceful Hover Delay
+  const [activeMegaMenu, setActiveMegaMenu] = useState<
+    'cards' | 'marketing' | 'signs' | 'templates' | 'resources' | null
+  >(null);
+  const closeTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const searchRef = useRef<HTMLDivElement>(null);
+  const userMenuRef = useRef<HTMLDivElement>(null);
+
+  // Clear timer on unmount
+  useEffect(() => {
+    return () => {
+      if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+    };
+  }, []);
+
+  const handleMenuMouseEnter = (
+    menu: 'cards' | 'marketing' | 'signs' | 'templates' | 'resources'
+  ) => {
+    if (closeTimerRef.current) {
+      clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = null;
+    }
+    setActiveMegaMenu(menu);
+  };
+
+  const handleMenuMouseLeave = () => {
+    if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+    closeTimerRef.current = setTimeout(() => {
+      setActiveMegaMenu(null);
+    }, 200);
+  };
+
+  const handleMenuClick = (
+    menu: 'cards' | 'marketing' | 'signs' | 'templates' | 'resources'
+  ) => {
+    if (activeMegaMenu === menu) {
+      setActiveMegaMenu(null);
+    } else {
+      setActiveMegaMenu(menu);
+    }
+  };
+
+  // Close search and user menu on click outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
         setIsSearchOpen(false);
       }
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setOpenDropdown(null);
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+        setIsUserMenuOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -68,6 +106,18 @@ export const Header: React.FC = () => {
           p.description.toLowerCase().includes(searchQuery.toLowerCase())
       )
     : [];
+
+  const handleSelectProductBySlug = (slug: string) => {
+    const product = products.find((p) => p.slug === slug);
+    if (product) {
+      setSelectedProductId(product.id);
+      setCurrentView('configurator');
+    } else {
+      setActiveCategory('all');
+      setCurrentView('catalog');
+    }
+    setActiveMegaMenu(null);
+  };
 
   return (
     <header className="sticky top-0 z-40 bg-white shadow-xs border-b border-slate-200 font-['Plus_Jakarta_Sans',sans-serif]">
@@ -110,7 +160,7 @@ export const Header: React.FC = () => {
                   setIsAdmin(true);
                 }
               }}
-              className="text-[11px] text-slate-400 hover:text-white transition flex items-center gap-1 border-l border-slate-700 pl-3"
+              className="text-[11px] text-slate-400 hover:text-white transition flex items-center gap-1 border-l border-slate-700 pl-3 cursor-pointer"
               title="Admin Order Management"
             >
               <ShieldCheck className="w-3 h-3 text-amber-400" />
@@ -121,7 +171,16 @@ export const Header: React.FC = () => {
       </div>
 
       {/* 2. Main Branding & Search Header (White Row Matching Mockup) */}
-      <div className="max-w-7xl mx-auto px-4 py-3.5 flex items-center justify-between gap-6">
+      <div className="max-w-7xl mx-auto px-4 py-3.5 flex items-center justify-between gap-4 sm:gap-6">
+        {/* Mobile Menu Hamburger */}
+        <button
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          className="lg:hidden p-1.5 text-slate-700 hover:text-slate-900 rounded-md hover:bg-slate-100 transition"
+          aria-label="Toggle navigation menu"
+        >
+          <MenuIcon className="w-6 h-6" />
+        </button>
+
         {/* Logo */}
         <div
           onClick={() => {
@@ -216,7 +275,7 @@ export const Header: React.FC = () => {
         </div>
 
         {/* Right Header Navigation: Help, My Account, Cart */}
-        <div className="flex items-center gap-4 sm:gap-6">
+        <div className="flex items-center gap-3 sm:gap-6">
           {/* Help */}
           <button
             onClick={() => setIsGuidelinesOpen(true)}
@@ -227,7 +286,7 @@ export const Header: React.FC = () => {
           </button>
 
           {/* My Account */}
-          <div className="relative">
+          <div ref={userMenuRef} className="relative">
             <button
               onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
               className="flex items-center gap-1.5 text-slate-700 hover:text-sky-600 text-sm font-semibold transition cursor-pointer py-1"
@@ -252,7 +311,7 @@ export const Header: React.FC = () => {
                       setCurrentView('customer-dashboard');
                       setIsUserMenuOpen(false);
                     }}
-                    className="w-full text-left px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-100 transition"
+                    className="w-full text-left px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-100 transition cursor-pointer"
                   >
                     Order History & Proofs
                   </button>
@@ -261,7 +320,7 @@ export const Header: React.FC = () => {
                       setIsSampleKitOpen(true);
                       setIsUserMenuOpen(false);
                     }}
-                    className="w-full text-left px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-100 transition"
+                    className="w-full text-left px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-100 transition cursor-pointer"
                   >
                     Request Free Sample Kit
                   </button>
@@ -279,7 +338,7 @@ export const Header: React.FC = () => {
                           switchUser(c.id);
                           setIsUserMenuOpen(false);
                         }}
-                        className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded text-xs transition ${
+                        className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded text-xs transition cursor-pointer ${
                           currentUser.id === c.id
                             ? 'bg-sky-50 text-sky-700 font-bold'
                             : 'text-slate-600 hover:bg-slate-50'
@@ -309,225 +368,466 @@ export const Header: React.FC = () => {
         </div>
       </div>
 
-      {/* 3. Sub-Navigation Bar (Matching Mockup with 'Get a Quote' Red Button) */}
-      <nav ref={dropdownRef} className="bg-white border-t border-slate-200">
+      {/* 3. Sub-Navigation Bar & Mega Menu Container */}
+      {/* NOTICE: Position is RELATIVE with NO overflow-hidden or overflow-x-auto to prevent clipping! */}
+      <nav className="relative bg-white border-t border-slate-200">
         <div className="max-w-7xl mx-auto px-4 flex items-center justify-between">
-          {/* Main Category Links */}
-          <div className="flex items-center space-x-1 sm:space-x-4 py-2 overflow-x-auto scrollbar-none text-sm font-semibold text-slate-700">
-            {/* Business Cards Dropdown */}
-            <div className="relative">
+          {/* Main Category Mega-Menu Triggers */}
+          <div className="hidden lg:flex items-center space-x-1 py-1 text-sm font-semibold text-slate-700">
+            {/* 1. Business Cards */}
+            <div
+              onMouseEnter={() => handleMenuMouseEnter('cards')}
+              onMouseLeave={handleMenuMouseLeave}
+              className="relative"
+            >
               <button
-                onClick={() => setOpenDropdown(openDropdown === 'cards' ? null : 'cards')}
-                className="flex items-center gap-1 px-3 py-1.5 rounded-md hover:text-sky-600 hover:bg-slate-50 transition cursor-pointer"
+                onClick={() => handleMenuClick('cards')}
+                className={`flex items-center gap-1.5 px-3.5 py-2.5 rounded-md transition cursor-pointer ${
+                  activeMegaMenu === 'cards'
+                    ? 'text-sky-600 bg-sky-50 font-bold'
+                    : 'hover:text-sky-600 hover:bg-slate-50'
+                }`}
               >
                 <span>Business Cards</span>
-                <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                <ChevronDown
+                  className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                    activeMegaMenu === 'cards' ? 'rotate-180 text-sky-600' : 'text-slate-400'
+                  }`}
+                />
               </button>
-
-              {openDropdown === 'cards' && (
-                <div className="absolute left-0 top-full mt-1 w-64 bg-white rounded-xl shadow-xl border border-slate-200 py-2 z-50 animate-in fade-in-50">
-                  <button
-                    onClick={() => {
-                      const dual = products.find((p) => p.slug === 'dual-raised-business-cards');
-                      if (dual) {
-                        setSelectedProductId(dual.id);
-                        setCurrentView('configurator');
-                      }
-                      setOpenDropdown(null);
-                    }}
-                    className="w-full text-left px-4 py-2 hover:bg-sky-50 text-xs font-bold text-slate-900 flex items-center justify-between"
-                  >
-                    <span>Dual Raised Business Cards</span>
-                    <span className="text-[10px] bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded font-black">
-                      HOT
-                    </span>
-                  </button>
-                  <button
-                    onClick={() => {
-                      const std = products.find((p) => p.slug === 'standard-business-cards');
-                      if (std) {
-                        setSelectedProductId(std.id);
-                        setCurrentView('configurator');
-                      }
-                      setOpenDropdown(null);
-                    }}
-                    className="w-full text-left px-4 py-2 hover:bg-sky-50 text-xs font-semibold text-slate-700"
-                  >
-                    Standard 16pt & 18pt Cards
-                  </button>
-                  <button
-                    onClick={() => {
-                      const prem = products.find((p) => p.slug === 'premium-business-cards');
-                      if (prem) {
-                        setSelectedProductId(prem.id);
-                        setCurrentView('configurator');
-                      }
-                      setOpenDropdown(null);
-                    }}
-                    className="w-full text-left px-4 py-2 hover:bg-sky-50 text-xs font-semibold text-slate-700"
-                  >
-                    Specialty & Foil Cards
-                  </button>
-                  <div className="border-t border-slate-100 my-1 pt-1">
-                    <button
-                      onClick={() => {
-                        setActiveCategory('business-cards');
-                        setCurrentView('catalog');
-                        setOpenDropdown(null);
-                      }}
-                      className="w-full text-left px-4 py-1.5 text-xs font-bold text-sky-600 hover:underline"
-                    >
-                      View All Business Cards →
-                    </button>
-                  </div>
-                </div>
-              )}
             </div>
 
-            {/* Marketing Products Dropdown */}
-            <div className="relative">
+            {/* 2. Marketing Products */}
+            <div
+              onMouseEnter={() => handleMenuMouseEnter('marketing')}
+              onMouseLeave={handleMenuMouseLeave}
+              className="relative"
+            >
               <button
-                onClick={() => setOpenDropdown(openDropdown === 'marketing' ? null : 'marketing')}
-                className="flex items-center gap-1 px-3 py-1.5 rounded-md hover:text-sky-600 hover:bg-slate-50 transition cursor-pointer"
+                onClick={() => handleMenuClick('marketing')}
+                className={`flex items-center gap-1.5 px-3.5 py-2.5 rounded-md transition cursor-pointer ${
+                  activeMegaMenu === 'marketing'
+                    ? 'text-sky-600 bg-sky-50 font-bold'
+                    : 'hover:text-sky-600 hover:bg-slate-50'
+                }`}
               >
                 <span>Marketing Products</span>
-                <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                <ChevronDown
+                  className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                    activeMegaMenu === 'marketing' ? 'rotate-180 text-sky-600' : 'text-slate-400'
+                  }`}
+                />
               </button>
-
-              {openDropdown === 'marketing' && (
-                <div className="absolute left-0 top-full mt-1 w-64 bg-white rounded-xl shadow-xl border border-slate-200 py-2 z-50 animate-in fade-in-50">
-                  <button
-                    onClick={() => {
-                      const fl = products.find((p) => p.slug === 'commercial-flyers');
-                      if (fl) {
-                        setSelectedProductId(fl.id);
-                        setCurrentView('configurator');
-                      }
-                      setOpenDropdown(null);
-                    }}
-                    className="w-full text-left px-4 py-2 hover:bg-sky-50 text-xs font-semibold text-slate-700"
-                  >
-                    Commercial Flyers & Handouts
-                  </button>
-                  <button
-                    onClick={() => {
-                      const br = products.find((p) => p.slug === 'custom-brochures');
-                      if (br) {
-                        setSelectedProductId(br.id);
-                        setCurrentView('configurator');
-                      }
-                      setOpenDropdown(null);
-                    }}
-                    className="w-full text-left px-4 py-2 hover:bg-sky-50 text-xs font-semibold text-slate-700"
-                  >
-                    Folded Brochures (Tri-fold, Z-fold)
-                  </button>
-                  <button
-                    onClick={() => {
-                      const pc = products.find((p) => p.slug === 'direct-mail-postcards');
-                      if (pc) {
-                        setSelectedProductId(pc.id);
-                        setCurrentView('configurator');
-                      }
-                      setOpenDropdown(null);
-                    }}
-                    className="w-full text-left px-4 py-2 hover:bg-sky-50 text-xs font-semibold text-slate-700"
-                  >
-                    Direct Mail & EDDM Postcards
-                  </button>
-                  <div className="border-t border-slate-100 my-1 pt-1">
-                    <button
-                      onClick={() => {
-                        setActiveCategory('marketing');
-                        setCurrentView('catalog');
-                        setOpenDropdown(null);
-                      }}
-                      className="w-full text-left px-4 py-1.5 text-xs font-bold text-sky-600 hover:underline"
-                    >
-                      View All Marketing Products →
-                    </button>
-                  </div>
-                </div>
-              )}
             </div>
 
-            {/* Signs & Banners */}
-            <button
-              onClick={() => {
-                setActiveCategory('signs-banners');
-                setCurrentView('catalog');
-              }}
-              className="px-3 py-1.5 rounded-md hover:text-sky-600 hover:bg-slate-50 transition cursor-pointer whitespace-nowrap"
+            {/* 3. Signs & Banners */}
+            <div
+              onMouseEnter={() => handleMenuMouseEnter('signs')}
+              onMouseLeave={handleMenuMouseLeave}
+              className="relative"
             >
-              Signs & Banners
-            </button>
-
-            {/* Templates */}
-            <button
-              onClick={() => setCurrentView('templates')}
-              className="px-3 py-1.5 rounded-md hover:text-sky-600 hover:bg-slate-50 transition cursor-pointer whitespace-nowrap"
-            >
-              Templates
-            </button>
-
-            {/* Resources Dropdown */}
-            <div className="relative">
               <button
-                onClick={() => setOpenDropdown(openDropdown === 'resources' ? null : 'resources')}
-                className="flex items-center gap-1 px-3 py-1.5 rounded-md hover:text-sky-600 hover:bg-slate-50 transition cursor-pointer"
+                onClick={() => handleMenuClick('signs')}
+                className={`flex items-center gap-1.5 px-3.5 py-2.5 rounded-md transition cursor-pointer ${
+                  activeMegaMenu === 'signs'
+                    ? 'text-sky-600 bg-sky-50 font-bold'
+                    : 'hover:text-sky-600 hover:bg-slate-50'
+                }`}
+              >
+                <span>Signs & Banners</span>
+                <ChevronDown
+                  className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                    activeMegaMenu === 'signs' ? 'rotate-180 text-sky-600' : 'text-slate-400'
+                  }`}
+                />
+              </button>
+            </div>
+
+            {/* 4. Templates */}
+            <div
+              onMouseEnter={() => handleMenuMouseEnter('templates')}
+              onMouseLeave={handleMenuMouseLeave}
+              className="relative"
+            >
+              <button
+                onClick={() => handleMenuClick('templates')}
+                className={`flex items-center gap-1.5 px-3.5 py-2.5 rounded-md transition cursor-pointer ${
+                  activeMegaMenu === 'templates'
+                    ? 'text-sky-600 bg-sky-50 font-bold'
+                    : 'hover:text-sky-600 hover:bg-slate-50'
+                }`}
+              >
+                <span>Templates</span>
+                <ChevronDown
+                  className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                    activeMegaMenu === 'templates' ? 'rotate-180 text-sky-600' : 'text-slate-400'
+                  }`}
+                />
+              </button>
+            </div>
+
+            {/* 5. Resources */}
+            <div
+              onMouseEnter={() => handleMenuMouseEnter('resources')}
+              onMouseLeave={handleMenuMouseLeave}
+              className="relative"
+            >
+              <button
+                onClick={() => handleMenuClick('resources')}
+                className={`flex items-center gap-1.5 px-3.5 py-2.5 rounded-md transition cursor-pointer ${
+                  activeMegaMenu === 'resources'
+                    ? 'text-sky-600 bg-sky-50 font-bold'
+                    : 'hover:text-sky-600 hover:bg-slate-50'
+                }`}
               >
                 <span>Resources</span>
-                <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                <ChevronDown
+                  className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                    activeMegaMenu === 'resources' ? 'rotate-180 text-sky-600' : 'text-slate-400'
+                  }`}
+                />
               </button>
-
-              {openDropdown === 'resources' && (
-                <div className="absolute left-0 top-full mt-1 w-56 bg-white rounded-xl shadow-xl border border-slate-200 py-2 z-50 animate-in fade-in-50">
-                  <button
-                    onClick={() => {
-                      setIsGuidelinesOpen(true);
-                      setOpenDropdown(null);
-                    }}
-                    className="w-full text-left px-4 py-2 hover:bg-sky-50 text-xs font-semibold text-slate-700 flex items-center gap-2"
-                  >
-                    <FileCheck className="w-3.5 h-3.5 text-sky-600" />
-                    Artwork Guidelines
-                  </button>
-                  <button
-                    onClick={() => {
-                      setIsSampleKitOpen(true);
-                      setOpenDropdown(null);
-                    }}
-                    className="w-full text-left px-4 py-2 hover:bg-sky-50 text-xs font-semibold text-slate-700 flex items-center gap-2"
-                  >
-                    <Package className="w-3.5 h-3.5 text-rose-500" />
-                    Free Paper Sample Kit
-                  </button>
-                  <button
-                    onClick={() => {
-                      setIsQuoteModalOpen(true);
-                      setOpenDropdown(null);
-                    }}
-                    className="w-full text-left px-4 py-2 hover:bg-sky-50 text-xs font-semibold text-slate-700 flex items-center gap-2"
-                  >
-                    <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                    Custom Quote Request
-                  </button>
-                </div>
-              )}
             </div>
           </div>
 
-          {/* Right Coral-Red "Get a Quote" Button (Matching Mockup) */}
-          <div className="py-2 pl-2">
+          {/* Mobile Categories Scroll Strip (When not expanded) */}
+          <div className="flex lg:hidden items-center space-x-2 py-2 overflow-x-auto text-xs font-bold text-slate-700 scrollbar-none">
             <button
-              onClick={() => setIsQuoteModalOpen(true)}
+              onClick={() => handleMenuClick('cards')}
+              className="px-2.5 py-1.5 rounded bg-slate-100 hover:bg-slate-200 shrink-0 cursor-pointer"
+            >
+              Cards ▾
+            </button>
+            <button
+              onClick={() => handleMenuClick('marketing')}
+              className="px-2.5 py-1.5 rounded bg-slate-100 hover:bg-slate-200 shrink-0 cursor-pointer"
+            >
+              Marketing ▾
+            </button>
+            <button
+              onClick={() => handleMenuClick('signs')}
+              className="px-2.5 py-1.5 rounded bg-slate-100 hover:bg-slate-200 shrink-0 cursor-pointer"
+            >
+              Signs ▾
+            </button>
+            <button
+              onClick={() => handleMenuClick('templates')}
+              className="px-2.5 py-1.5 rounded bg-slate-100 hover:bg-slate-200 shrink-0 cursor-pointer"
+            >
+              Templates ▾
+            </button>
+            <button
+              onClick={() => handleMenuClick('resources')}
+              className="px-2.5 py-1.5 rounded bg-slate-100 hover:bg-slate-200 shrink-0 cursor-pointer"
+            >
+              Resources ▾
+            </button>
+          </div>
+
+          {/* Right Coral-Red "Get a Quote" Button (Matching Mockup) */}
+          <div className="py-2 pl-2 shrink-0">
+            <button
+              onClick={() => {
+                setIsQuoteModalOpen(true);
+                setActiveMegaMenu(null);
+              }}
               className="bg-[#EA4335] hover:bg-[#D93025] text-white font-bold text-xs sm:text-sm px-4 sm:px-5 py-2 rounded-md shadow-xs transition duration-150 cursor-pointer whitespace-nowrap"
             >
               Get a Quote
             </button>
           </div>
         </div>
+
+        {/* ========================================================================= */}
+        {/* FULL-WIDTH UNCLIPPED MEGA MENU DROPDOWN PANEL */}
+        {/* ========================================================================= */}
+        <div
+          onMouseEnter={() => {
+            if (closeTimerRef.current) {
+              clearTimeout(closeTimerRef.current);
+              closeTimerRef.current = null;
+            }
+          }}
+          onMouseLeave={handleMenuMouseLeave}
+        >
+          <MegaMenu
+            activeMenu={activeMegaMenu}
+            onClose={() => setActiveMegaMenu(null)}
+            onSelectProductBySlug={handleSelectProductBySlug}
+            onSelectCategory={setActiveCategory}
+            onNavigate={setCurrentView}
+            onOpenModal={(modal) => {
+              if (modal === 'quote') setIsQuoteModalOpen(true);
+              if (modal === 'sample-kit') setIsSampleKitOpen(true);
+              if (modal === 'guidelines') setIsGuidelinesOpen(true);
+            }}
+            products={products}
+          />
+        </div>
       </nav>
+
+      {/* Dimmed backdrop when Mega Menu is open */}
+      {activeMegaMenu && (
+        <div
+          onClick={() => setActiveMegaMenu(null)}
+          className="fixed inset-0 top-[138px] bg-slate-900/25 backdrop-blur-[1px] z-30 transition-opacity"
+        />
+      )}
+
+      {/* Mobile Drawer (When Hamburger is clicked) */}
+      {isMobileMenuOpen && (
+        <div className="lg:hidden fixed inset-0 top-[115px] bg-white z-50 overflow-y-auto p-4 space-y-4 shadow-2xl border-t border-slate-200">
+          <div className="flex items-center justify-between pb-3 border-b border-slate-200">
+            <span className="font-bold text-slate-900 text-sm">Print4Colors Directory</span>
+            <button
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="p-1 rounded-md text-slate-500 hover:text-slate-800"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          {/* Mobile Accordion */}
+          <div className="space-y-2">
+            {/* 1. Business Cards */}
+            <div className="border border-slate-200 rounded-xl overflow-hidden">
+              <button
+                onClick={() =>
+                  setMobileExpandedSection(
+                    mobileExpandedSection === 'cards' ? null : 'cards'
+                  )
+                }
+                className="w-full flex items-center justify-between p-3.5 bg-slate-50 text-slate-900 font-bold text-sm text-left"
+              >
+                <span>Business Cards</span>
+                <ChevronDown
+                  className={`w-4 h-4 transition-transform ${
+                    mobileExpandedSection === 'cards' ? 'rotate-180 text-sky-600' : ''
+                  }`}
+                />
+              </button>
+              {mobileExpandedSection === 'cards' && (
+                <div className="p-3 space-y-2 bg-white divide-y divide-slate-100 text-xs">
+                  <button
+                    onClick={() => {
+                      handleSelectProductBySlug('dual-raised-business-cards');
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="w-full text-left py-2 font-bold text-slate-900 hover:text-sky-600 flex justify-between"
+                  >
+                    <span>Dual Raised Foil & UV Cards</span>
+                    <span className="text-[10px] bg-amber-400 text-slate-950 px-1 rounded font-black">
+                      HOT
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      handleSelectProductBySlug('standard-business-cards');
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="w-full text-left py-2 text-slate-700 hover:text-sky-600"
+                  >
+                    Standard 16pt & 18pt Cards
+                  </button>
+                  <button
+                    onClick={() => {
+                      handleSelectProductBySlug('premium-business-cards');
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="w-full text-left py-2 text-slate-700 hover:text-sky-600"
+                  >
+                    Specialty Metallic Foil & Plastic
+                  </button>
+                  <button
+                    onClick={() => {
+                      setActiveCategory('business-cards');
+                      setCurrentView('catalog');
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="w-full text-left py-2 text-sky-600 font-bold"
+                  >
+                    View All Business Cards →
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* 2. Marketing Products */}
+            <div className="border border-slate-200 rounded-xl overflow-hidden">
+              <button
+                onClick={() =>
+                  setMobileExpandedSection(
+                    mobileExpandedSection === 'marketing' ? null : 'marketing'
+                  )
+                }
+                className="w-full flex items-center justify-between p-3.5 bg-slate-50 text-slate-900 font-bold text-sm text-left"
+              >
+                <span>Marketing Products</span>
+                <ChevronDown
+                  className={`w-4 h-4 transition-transform ${
+                    mobileExpandedSection === 'marketing' ? 'rotate-180 text-sky-600' : ''
+                  }`}
+                />
+              </button>
+              {mobileExpandedSection === 'marketing' && (
+                <div className="p-3 space-y-2 bg-white divide-y divide-slate-100 text-xs">
+                  <button
+                    onClick={() => {
+                      handleSelectProductBySlug('commercial-flyers');
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="w-full text-left py-2 text-slate-900 font-semibold"
+                  >
+                    Club & Commercial Flyers
+                  </button>
+                  <button
+                    onClick={() => {
+                      handleSelectProductBySlug('custom-brochures');
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="w-full text-left py-2 text-slate-900 font-semibold"
+                  >
+                    Folded Brochures (Tri-fold & Z-fold)
+                  </button>
+                  <button
+                    onClick={() => {
+                      handleSelectProductBySlug('direct-mail-postcards');
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="w-full text-left py-2 text-slate-900 font-semibold"
+                  >
+                    Direct Mail & EDDM Postcards
+                  </button>
+                  <button
+                    onClick={() => {
+                      setActiveCategory('marketing');
+                      setCurrentView('catalog');
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="w-full text-left py-2 text-sky-600 font-bold"
+                  >
+                    View All Marketing Products →
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* 3. Signs & Banners */}
+            <div className="border border-slate-200 rounded-xl overflow-hidden">
+              <button
+                onClick={() =>
+                  setMobileExpandedSection(
+                    mobileExpandedSection === 'signs' ? null : 'signs'
+                  )
+                }
+                className="w-full flex items-center justify-between p-3.5 bg-slate-50 text-slate-900 font-bold text-sm text-left"
+              >
+                <span>Signs & Banners</span>
+                <ChevronDown
+                  className={`w-4 h-4 transition-transform ${
+                    mobileExpandedSection === 'signs' ? 'rotate-180 text-sky-600' : ''
+                  }`}
+                />
+              </button>
+              {mobileExpandedSection === 'signs' && (
+                <div className="p-3 space-y-2 bg-white divide-y divide-slate-100 text-xs">
+                  <button
+                    onClick={() => {
+                      handleSelectProductBySlug('outdoor-vinyl-banners');
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="w-full text-left py-2 text-slate-900 font-semibold"
+                  >
+                    Heavy-Duty Outdoor Vinyl Banners
+                  </button>
+                  <button
+                    onClick={() => {
+                      handleSelectProductBySlug('corrugated-yard-signs');
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="w-full text-left py-2 text-slate-900 font-semibold"
+                  >
+                    Coroplast Yard Signs (with H-Stakes)
+                  </button>
+                  <button
+                    onClick={() => {
+                      handleSelectProductBySlug('vinyl-decals-graphics');
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="w-full text-left py-2 text-slate-900 font-semibold"
+                  >
+                    Window & Storefront Decals
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* 4. Templates */}
+            <div className="border border-slate-200 rounded-xl overflow-hidden">
+              <button
+                onClick={() => {
+                  setCurrentView('templates');
+                  setIsMobileMenuOpen(false);
+                }}
+                className="w-full flex items-center justify-between p-3.5 bg-slate-50 text-slate-900 font-bold text-sm text-left"
+              >
+                <span>Browse All Templates</span>
+                <span className="text-xs text-sky-600">Open →</span>
+              </button>
+            </div>
+
+            {/* 5. Resources */}
+            <div className="border border-slate-200 rounded-xl overflow-hidden">
+              <button
+                onClick={() =>
+                  setMobileExpandedSection(
+                    mobileExpandedSection === 'resources' ? null : 'resources'
+                  )
+                }
+                className="w-full flex items-center justify-between p-3.5 bg-slate-50 text-slate-900 font-bold text-sm text-left"
+              >
+                <span>Resources & Preflight</span>
+                <ChevronDown
+                  className={`w-4 h-4 transition-transform ${
+                    mobileExpandedSection === 'resources' ? 'rotate-180 text-sky-600' : ''
+                  }`}
+                />
+              </button>
+              {mobileExpandedSection === 'resources' && (
+                <div className="p-3 space-y-2 bg-white divide-y divide-slate-100 text-xs">
+                  <button
+                    onClick={() => {
+                      setIsGuidelinesOpen(true);
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="w-full text-left py-2 text-slate-900 font-semibold"
+                  >
+                    Artwork Bleed & Margins Guidelines
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsSampleKitOpen(true);
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="w-full text-left py-2 text-slate-900 font-semibold text-rose-600"
+                  >
+                    Request Free Paper Sample Kit
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsQuoteModalOpen(true);
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="w-full text-left py-2 text-slate-900 font-semibold text-amber-700"
+                  >
+                    Custom Commercial Quote Estimator
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </header>
   );
 };
