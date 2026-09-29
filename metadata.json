@@ -1,0 +1,6 @@
+{
+  "name": "Print4Colors - Online Commercial Printing & Custom Print Solutions",
+  "description": "Premier US online printing platform. Business cards, marketing flyers, brochures, yard signs, vinyl banners, interactive dynamic pricing, live template customizer, instant proof approvals, and full admin order management.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
