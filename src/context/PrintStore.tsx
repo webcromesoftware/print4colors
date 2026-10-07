@@ -17,6 +17,7 @@ import {
   INITIAL_QUOTES,
   INITIAL_CUSTOMERS
 } from '../data/mockData';
+import { supabaseDb, isSupabaseConfigured } from '../lib/supabase';
 
 interface Toast {
   id: string;
@@ -96,6 +97,7 @@ interface PrintContextType {
   setIsQuoteModalOpen: (val: boolean) => void;
   isCartDrawerOpen: boolean;
   setIsCartDrawerOpen: (val: boolean) => void;
+  isSupabaseConfigured: boolean;
 }
 
 const PrintContext = createContext<PrintContextType | undefined>(undefined);
@@ -191,6 +193,86 @@ export const PrintProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   useEffect(() => {
     localStorage.setItem('p4c_products', JSON.stringify(products));
   }, [products]);
+
+  // Initial fetch from Supabase if configured
+  useEffect(() => {
+    if (isSupabaseConfigured) {
+      supabaseDb.fetchOrders().then((remoteOrders) => {
+        if (remoteOrders && remoteOrders.length > 0) {
+          // Map DB columns to Order object if present
+          const mapped = remoteOrders.map((ro: any) => ({
+            id: ro.id || ro.order_number,
+            createdAt: ro.created_at,
+            customer: {
+              name: ro.customer_name,
+              email: ro.customer_email,
+              phone: '',
+            },
+            shippingAddress: ro.shipping_address || {
+              street: '123 Main St',
+              city: 'New York',
+              state: 'NY',
+              zipCode: '10001',
+              country: 'United States',
+            },
+            items: ro.items || [],
+            subtotal: Number(ro.subtotal) || 0,
+            discount: 0,
+            shippingFee: Number(ro.shipping_fee) || 0,
+            shippingMethod: 'Standard',
+            tax: Number(ro.tax) || 0,
+            total: Number(ro.total) || 0,
+            paymentStatus: 'Paid' as const,
+            paymentMethod: 'Credit Card',
+            paymentTransactionId: 'tx_supabase',
+            orderStatus: (ro.status || 'In Production') as OrderStatus,
+            statusHistory: [
+              {
+                status: ro.status || 'In Production',
+                timestamp: ro.created_at,
+                note: 'Synced from Supabase database.',
+              },
+            ],
+            proofs: ro.proof_versions || [],
+            estimatedDeliveryDate: new Date(Date.now() + 4 * 86400000).toISOString().split('T')[0],
+          }));
+          setOrders((prev) => {
+            const existingIds = new Set(prev.map((o) => o.id));
+            const newOnes = mapped.filter((m: any) => !existingIds.has(m.id));
+            return [...newOnes, ...prev];
+          });
+        }
+      });
+
+      supabaseDb.fetchQuotes().then((remoteQuotes) => {
+        if (remoteQuotes && remoteQuotes.length > 0) {
+          const mapped: QuoteRequest[] = remoteQuotes.map((rq: any) => ({
+            id: rq.id,
+            createdAt: rq.created_at,
+            name: rq.customer_name || rq.name || 'Anonymous',
+            company: rq.company || '',
+            email: rq.email,
+            phone: rq.phone || '',
+            product: rq.product_name || rq.product || 'Custom Project',
+            quantity: String(rq.quantity || '500'),
+            dimensions: rq.size || rq.dimensions || 'Standard',
+            requirements: rq.custom_requirements || rq.requirements || '',
+            notes: rq.admin_notes || '',
+            hasArtwork: Boolean(rq.has_artwork),
+            artworkFileName: rq.artwork_file_name,
+            status: (rq.status || 'New') as QuoteRequest['status'],
+            adminNotes: rq.admin_notes || '',
+            quotedAmount: rq.quoted_amount ? Number(rq.quoted_amount) : undefined,
+          }));
+          setQuotes((prev) => {
+            const existingIds = new Set(prev.map((q) => q.id));
+            const newOnes = mapped.filter((m) => !existingIds.has(m.id));
+            return [...newOnes, ...prev];
+          });
+        }
+      });
+    }
+  }, []);
 
   // Cart calculations
   const cartSubtotal = cart.reduce((sum, item) => sum + item.totalPrice, 0);
@@ -330,6 +412,28 @@ export const PrintProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     clearCart();
     setSelectedOrderId(newOrder.id);
     showToast(`Order #${newOrder.id} placed successfully! Thank you for your business.`, 'success');
+
+    // Async sync to Supabase if configured
+    if (isSupabaseConfigured) {
+      supabaseDb.insertOrder({
+        id: newOrder.id,
+        orderNumber: newOrder.id,
+        customerId: currentUser.id,
+        customerName: newOrder.customer.name,
+        customerEmail: newOrder.customer.email,
+        items: newOrder.items,
+        subtotal: newOrder.subtotal,
+        shippingFee: newOrder.shippingFee,
+        tax: newOrder.tax,
+        total: newOrder.total,
+        status: newOrder.orderStatus,
+        shippingAddress: newOrder.shippingAddress,
+        proofStatus: newOrder.proofs.length > 0 ? 'Artwork Review' : 'Approved',
+        proofVersions: newOrder.proofs,
+        createdAt: newOrder.createdAt,
+      });
+    }
+
     return newOrder;
   };
 
@@ -354,6 +458,9 @@ export const PrintProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         return ord;
       })
     );
+    if (isSupabaseConfigured) {
+      supabaseDb.updateOrderStatus(orderId, newStatus);
+    }
     showToast(`Order #${orderId} marked as "${newStatus}"`, 'info');
   };
 
@@ -508,6 +615,21 @@ export const PrintProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     };
     setQuotes((prev) => [newQuote, ...prev]);
     showToast(`Quote request #${newQuote.id} received! Our estimators will review and email you shortly.`, 'success');
+
+    if (isSupabaseConfigured) {
+      supabaseDb.insertQuote({
+        id: newQuote.id,
+        customerName: newQuote.name,
+        company: newQuote.company,
+        email: newQuote.email,
+        phone: newQuote.phone,
+        productName: newQuote.product,
+        quantity: parseInt(newQuote.quantity) || 500,
+        size: newQuote.dimensions,
+        customRequirements: newQuote.requirements,
+        status: newQuote.status,
+      });
+    }
   };
 
   const updateQuoteStatus = (
@@ -600,6 +722,7 @@ export const PrintProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         setIsQuoteModalOpen,
         isCartDrawerOpen,
         setIsCartDrawerOpen,
+        isSupabaseConfigured,
       }}
     >
       {children}

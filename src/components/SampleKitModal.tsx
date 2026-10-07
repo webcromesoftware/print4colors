@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { usePrintStore } from '../context/PrintStore';
+import { supabaseDb, isSupabaseConfigured } from '../lib/supabase';
 import { X, Package, CheckCircle2, ShieldCheck } from 'lucide-react';
 
 export const SampleKitModal: React.FC = () => {
@@ -16,6 +17,19 @@ export const SampleKitModal: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSupabaseConfigured) {
+      supabaseDb.insertSampleKit({
+        name,
+        company,
+        email: `${name.toLowerCase().replace(/\s+/g, '.')}@samplekit.com`,
+        phone: '',
+        street,
+        city,
+        state,
+        zip,
+        interest: 'Commercial Paper Swatch Sample Kit'
+      });
+    }
     setSubmitted(true);
     showToast('Your Free US Paper Sample Kit is on its way via USPS Priority!', 'success');
     setTimeout(() => {

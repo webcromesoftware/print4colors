@@ -22,7 +22,12 @@ import {
   Eye,
   Send,
   ExternalLink,
-  MessageSquare
+  MessageSquare,
+  Database,
+  Copy,
+  Check,
+  Server,
+  Terminal
 } from 'lucide-react';
 
 const ALL_ORDER_STATUSES: OrderStatus[] = [
@@ -53,10 +58,12 @@ export const AdminPanel: React.FC = () => {
     addProduct,
     setSelectedOrderId,
     setCurrentView,
-    showToast
+    showToast,
+    isSupabaseConfigured
   } = usePrintStore();
 
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'orders' | 'products' | 'customers' | 'quotes' | 'proofs'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'orders' | 'products' | 'customers' | 'quotes' | 'proofs' | 'database'>('dashboard');
+  const [copiedSql, setCopiedSql] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(orders[0] || null);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [searchFilter, setSearchFilter] = useState<string>('');
@@ -223,6 +230,19 @@ export const AdminPanel: React.FC = () => {
               {newQuotesCount}
             </span>
           )}
+        </button>
+
+        <button
+          onClick={() => setActiveTab('database')}
+          className={`pb-3 border-b-2 transition cursor-pointer flex items-center gap-2 whitespace-nowrap ${
+            activeTab === 'database'
+              ? 'border-emerald-600 text-emerald-600 font-black'
+              : 'border-transparent text-slate-500 hover:text-slate-800'
+          }`}
+        >
+          <Database className="w-4 h-4 text-emerald-500" />
+          <span>Supabase & Deployment</span>
+          <span className={`w-2 h-2 rounded-full ${isSupabaseConfigured ? 'bg-emerald-500 animate-pulse' : 'bg-amber-400'}`} />
         </button>
       </div>
 
@@ -830,6 +850,251 @@ export const AdminPanel: React.FC = () => {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+      {/* TAB: SUPABASE & DEPLOYMENT */}
+      {activeTab === 'database' && (
+        <div className="space-y-6">
+          {/* Header Status Banner */}
+          <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${isSupabaseConfigured ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600'}`}>
+                <Database className="w-6 h-6" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-base font-black text-slate-900">Supabase Database Integration</h3>
+                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${isSupabaseConfigured ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}>
+                    {isSupabaseConfigured ? 'Connected & Live' : 'Local Fallback Mode'}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  {isSupabaseConfigured
+                    ? 'Connected to your Supabase PostgreSQL database. Orders, quotes, and sample kits are syncing in real time.'
+                    : 'Currently using local browser storage. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to link your database.'}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-slate-500 font-mono">GitHub Repo:</span>
+              <a
+                href="https://github.com/webcromesoftware/print4colors"
+                target="_blank"
+                rel="noreferrer"
+                className="text-xs font-bold text-sky-600 hover:text-sky-700 flex items-center gap-1 bg-sky-50 px-3 py-1.5 rounded-lg border border-sky-200"
+              >
+                <span>webcromesoftware/print4colors</span>
+                <ExternalLink className="w-3 h-3" />
+              </a>
+            </div>
+          </div>
+
+          {/* 3 Step Deployment Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Step 1: Supabase Setup */}
+            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4 flex flex-col justify-between">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-black uppercase tracking-wider text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-md">
+                    Step 1
+                  </span>
+                  <Database className="w-4 h-4 text-emerald-500" />
+                </div>
+                <h4 className="text-base font-black text-slate-900">Setup Supabase Database</h4>
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  1. Log into your free account at <strong className="text-slate-800">supabase.com</strong> and create a project.<br />
+                  2. Open the <strong className="text-slate-800">SQL Editor</strong> on the left sidebar.<br />
+                  3. Paste our migration script and click <strong className="text-slate-800">Run</strong>.<br />
+                  4. Go to <strong className="text-slate-800">Project Settings → API</strong> to copy your URL & anon key.
+                </p>
+              </div>
+
+              <div className="pt-2">
+                <button
+                  onClick={() => {
+                    const sqlScript = `-- Run in Supabase SQL Editor:
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+CREATE TABLE IF NOT EXISTS public.orders (
+    id TEXT PRIMARY KEY,
+    order_number TEXT NOT NULL UNIQUE,
+    customer_id TEXT NOT NULL,
+    customer_name TEXT NOT NULL,
+    customer_email TEXT NOT NULL,
+    items JSONB NOT NULL DEFAULT '[]'::jsonb,
+    subtotal NUMERIC(10, 2) NOT NULL DEFAULT 0.00,
+    shipping_fee NUMERIC(10, 2) NOT NULL DEFAULT 0.00,
+    tax NUMERIC(10, 2) NOT NULL DEFAULT 0.00,
+    total NUMERIC(10, 2) NOT NULL DEFAULT 0.00,
+    status TEXT NOT NULL DEFAULT 'order_received',
+    shipping_address JSONB,
+    tracking_number TEXT,
+    tracking_carrier TEXT,
+    proof_status TEXT DEFAULT 'pending',
+    proof_versions JSONB DEFAULT '[]'::jsonb,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.quotes (
+    id TEXT PRIMARY KEY,
+    customer_name TEXT NOT NULL,
+    company TEXT,
+    email TEXT NOT NULL,
+    phone TEXT,
+    product_name TEXT NOT NULL,
+    quantity INTEGER NOT NULL,
+    size TEXT,
+    stock TEXT,
+    coating TEXT,
+    turnaround TEXT,
+    custom_requirements TEXT,
+    estimated_budget TEXT,
+    status TEXT NOT NULL DEFAULT 'pending',
+    quoted_amount NUMERIC(10, 2),
+    admin_notes TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.sample_kit_requests (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name TEXT NOT NULL,
+    company TEXT,
+    email TEXT NOT NULL,
+    phone TEXT,
+    street TEXT NOT NULL,
+    city TEXT NOT NULL,
+    state TEXT NOT NULL,
+    zip TEXT NOT NULL,
+    interest TEXT DEFAULT 'General Commercial Print',
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.newsletter_subscribers (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    email TEXT NOT NULL UNIQUE,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE public.orders ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.quotes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.sample_kit_requests ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.newsletter_subscribers ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow public insert on orders" ON public.orders FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow public read on orders" ON public.orders FOR SELECT USING (true);
+CREATE POLICY "Allow public update on orders" ON public.orders FOR UPDATE USING (true);
+CREATE POLICY "Allow public insert on quotes" ON public.quotes FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow public read on quotes" ON public.quotes FOR SELECT USING (true);
+CREATE POLICY "Allow public insert on sample kits" ON public.sample_kit_requests FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow public insert on newsletter" ON public.newsletter_subscribers FOR INSERT WITH CHECK (true);
+`;
+                    navigator.clipboard.writeText(sqlScript);
+                    setCopiedSql(true);
+                    showToast('Supabase SQL Schema copied to clipboard!', 'success');
+                    setTimeout(() => setCopiedSql(false), 3000);
+                  }}
+                  className="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+                >
+                  {copiedSql ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                  <span>{copiedSql ? 'Copied SQL Script!' : 'Copy SQL Schema Script'}</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Step 2: Deploy to Vercel */}
+            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4 flex flex-col justify-between">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-black uppercase tracking-wider text-sky-600 bg-sky-50 px-2.5 py-1 rounded-md">
+                    Option A
+                  </span>
+                  <Server className="w-4 h-4 text-sky-500" />
+                </div>
+                <h4 className="text-base font-black text-slate-900">Deploy to Vercel via GitHub</h4>
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  1. Visit <strong className="text-slate-800">vercel.com</strong> and click <strong className="text-slate-800">Add New → Project</strong>.<br />
+                  2. Select your GitHub repository <strong className="text-slate-800">webcromesoftware/print4colors</strong>.<br />
+                  3. Framework Preset: Automatically detected as <strong className="text-slate-800">Vite</strong>.<br />
+                  4. Under <strong className="text-slate-800">Environment Variables</strong>, add your Supabase keys.<br />
+                  5. Click <strong className="text-slate-800">Deploy</strong>. Your site goes live with automated CI/CD!
+                </p>
+              </div>
+
+              <div className="pt-2">
+                <a
+                  href="https://vercel.com/new"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="w-full py-2.5 px-4 bg-slate-900 hover:bg-black text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+                >
+                  <span>Open Vercel Import →</span>
+                </a>
+              </div>
+            </div>
+
+            {/* Step 3: Deploy to Cloudflare Pages */}
+            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4 flex flex-col justify-between">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-black uppercase tracking-wider text-amber-600 bg-amber-50 px-2.5 py-1 rounded-md">
+                    Option B
+                  </span>
+                  <Terminal className="w-4 h-4 text-amber-500" />
+                </div>
+                <h4 className="text-base font-black text-slate-900">Deploy to Cloudflare Pages</h4>
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  1. Go to <strong className="text-slate-800">dash.cloudflare.com → Workers & Pages</strong>.<br />
+                  2. Click <strong className="text-slate-800">Create Application → Pages → Connect to Git</strong>.<br />
+                  3. Select <strong className="text-slate-800">webcromesoftware/print4colors</strong>.<br />
+                  4. Build command: <code className="bg-slate-100 px-1 py-0.5 rounded text-[11px]">npm run build</code>.<br />
+                  5. Build output directory: <code className="bg-slate-100 px-1 py-0.5 rounded text-[11px]">dist</code>.<br />
+                  6. Add your Supabase environment variables and click <strong className="text-slate-800">Save and Deploy</strong>.
+                </p>
+              </div>
+
+              <div className="pt-2">
+                <a
+                  href="https://dash.cloudflare.com"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="w-full py-2.5 px-4 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+                >
+                  <span>Open Cloudflare Dashboard →</span>
+                </a>
+              </div>
+            </div>
+          </div>
+
+          {/* Environment Variables Reference Table */}
+          <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4">
+            <h4 className="text-sm font-black text-slate-900 uppercase tracking-wider">
+              Required Environment Variables for Vercel / Cloudflare Pages
+            </h4>
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs text-left">
+                <thead className="bg-slate-50 text-slate-600 uppercase font-black text-[11px] border-b border-slate-200">
+                  <tr>
+                    <th className="py-2.5 px-4">Variable Name</th>
+                    <th className="py-2.5 px-4">Where to find it in Supabase</th>
+                    <th className="py-2.5 px-4">Example Value</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 text-slate-700 font-mono">
+                  <tr>
+                    <td className="py-3 px-4 font-bold text-sky-700">VITE_SUPABASE_URL</td>
+                    <td className="py-3 px-4 font-sans">Project Settings → API → Project URL</td>
+                    <td className="py-3 px-4 text-slate-500">https://xyzcompany.supabase.co</td>
+                  </tr>
+                  <tr>
+                    <td className="py-3 px-4 font-bold text-sky-700">VITE_SUPABASE_ANON_KEY</td>
+                    <td className="py-3 px-4 font-sans">Project Settings → API → Project API keys → anon / public</td>
+                    <td className="py-3 px-4 text-slate-500">eyJhbGciOiJIUzI1NiIsInR5cCI6...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}

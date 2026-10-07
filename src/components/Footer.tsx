@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { usePrintStore } from '../context/PrintStore';
 import { Print4ColorsLogo } from './Print4ColorsLogo';
+import { supabaseDb, isSupabaseConfigured } from '../lib/supabase';
 import {
   ArrowRight,
   Instagram,
@@ -26,6 +27,9 @@ export const Footer: React.FC = () => {
   const handleSubscribe = (e: React.FormEvent) => {
     e.preventDefault();
     if (newsletterEmail.trim() && newsletterEmail.includes('@')) {
+      if (isSupabaseConfigured) {
+        supabaseDb.insertNewsletterSubscriber(newsletterEmail.trim());
+      }
       setSubscribed(true);
       showToast('Thank you for subscribing to Print4Colors updates & offers!', 'success');
       setNewsletterEmail('');
