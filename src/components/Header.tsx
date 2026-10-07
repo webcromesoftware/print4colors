@@ -15,6 +15,7 @@ import {
 import { usePrintStore } from '../context/PrintStore';
 import { Print4ColorsLogo } from './Print4ColorsLogo';
 import { MegaMenu } from './MegaMenu';
+import { useEditorMode } from '../utils/editorMode';
 
 export const Header: React.FC = () => {
   const {
@@ -36,6 +37,8 @@ export const Header: React.FC = () => {
     setSearchQuery,
     setActiveCategory,
   } = usePrintStore();
+
+  const { isEditorMode } = useEditorMode();
 
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
@@ -149,23 +152,25 @@ export const Header: React.FC = () => {
               </a>
             </div>
 
-            {/* Subtle Admin toggle */}
-            <button
-              onClick={() => {
-                if (currentView === 'admin-panel') {
-                  setCurrentView('home');
-                  setIsAdmin(false);
-                } else {
-                  setCurrentView('admin-panel');
-                  setIsAdmin(true);
-                }
-              }}
-              className="text-[11px] text-slate-400 hover:text-white transition flex items-center gap-1 border-l border-slate-700 pl-3 cursor-pointer"
-              title="Admin Order Management"
-            >
-              <ShieldCheck className="w-3 h-3 text-amber-400" />
-              <span>{isAdmin ? 'Exit Admin' : 'Admin'}</span>
-            </button>
+            {/* Subtle Admin toggle - Only visible in Editor mode */}
+            {isEditorMode && (
+              <button
+                onClick={() => {
+                  if (currentView === 'admin-panel') {
+                    setCurrentView('home');
+                    setIsAdmin(false);
+                  } else {
+                    setCurrentView('admin-panel');
+                    setIsAdmin(true);
+                  }
+                }}
+                className="text-[11px] text-slate-400 hover:text-white transition flex items-center gap-1 border-l border-slate-700 pl-3 cursor-pointer"
+                title="Admin Order Management"
+              >
+                <ShieldCheck className="w-3 h-3 text-amber-400" />
+                <span>{isAdmin ? 'Exit Admin' : 'Admin'}</span>
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -285,74 +290,76 @@ export const Header: React.FC = () => {
             <span>Help</span>
           </button>
 
-          {/* My Account */}
-          <div ref={userMenuRef} className="relative">
-            <button
-              onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-              className="flex items-center gap-1.5 text-slate-700 hover:text-sky-600 text-sm font-semibold transition cursor-pointer py-1"
-            >
-              <User className="w-4 h-4 text-slate-500" />
-              <span className="hidden sm:inline">My Account</span>
-            </button>
+          {/* My Account - Only visible in Editor mode */}
+          {isEditorMode && (
+            <div ref={userMenuRef} className="relative">
+              <button
+                onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                className="flex items-center gap-1.5 text-slate-700 hover:text-sky-600 text-sm font-semibold transition cursor-pointer py-1"
+              >
+                <User className="w-4 h-4 text-slate-500" />
+                <span className="hidden sm:inline">My Account</span>
+              </button>
 
-            {/* Account Switcher Modal/Menu */}
-            {isUserMenuOpen && (
-              <div className="absolute right-0 top-full mt-2 w-72 bg-white rounded-xl shadow-2xl border border-slate-200 z-50 p-3 divide-y divide-slate-100 animate-in fade-in-50 zoom-in-95">
-                <div className="pb-3">
-                  <div className="text-xs text-slate-400">Current User</div>
-                  <div className="font-bold text-slate-900 text-sm">{currentUser.name}</div>
-                  <div className="text-xs text-slate-500 truncate">{currentUser.email}</div>
-                  <div className="text-[11px] text-sky-600 font-semibold mt-1">{currentUser.company}</div>
-                </div>
-
-                <div className="py-2 space-y-1">
-                  <button
-                    onClick={() => {
-                      setCurrentView('customer-dashboard');
-                      setIsUserMenuOpen(false);
-                    }}
-                    className="w-full text-left px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-100 transition cursor-pointer"
-                  >
-                    Order History & Proofs
-                  </button>
-                  <button
-                    onClick={() => {
-                      setIsSampleKitOpen(true);
-                      setIsUserMenuOpen(false);
-                    }}
-                    className="w-full text-left px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-100 transition cursor-pointer"
-                  >
-                    Request Free Sample Kit
-                  </button>
-                </div>
-
-                <div className="pt-2">
-                  <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
-                    Switch Test Account
+              {/* Account Switcher Modal/Menu */}
+              {isUserMenuOpen && (
+                <div className="absolute right-0 top-full mt-2 w-72 bg-white rounded-xl shadow-2xl border border-slate-200 z-50 p-3 divide-y divide-slate-100 animate-in fade-in-50 zoom-in-95">
+                  <div className="pb-3">
+                    <div className="text-xs text-slate-400">Current User</div>
+                    <div className="font-bold text-slate-900 text-sm">{currentUser.name}</div>
+                    <div className="text-xs text-slate-500 truncate">{currentUser.email}</div>
+                    <div className="text-[11px] text-sky-600 font-semibold mt-1">{currentUser.company}</div>
                   </div>
-                  <div className="space-y-1">
-                    {customers.map((c) => (
-                      <button
-                        key={c.id}
-                        onClick={() => {
-                          switchUser(c.id);
-                          setIsUserMenuOpen(false);
-                        }}
-                        className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded text-xs transition cursor-pointer ${
-                          currentUser.id === c.id
-                            ? 'bg-sky-50 text-sky-700 font-bold'
-                            : 'text-slate-600 hover:bg-slate-50'
-                        }`}
-                      >
-                        <span className="truncate">{c.name} ({c.company})</span>
-                        {currentUser.id === c.id && <CheckCircle2 className="w-3.5 h-3.5 text-sky-600" />}
-                      </button>
-                    ))}
+
+                  <div className="py-2 space-y-1">
+                    <button
+                      onClick={() => {
+                        setCurrentView('customer-dashboard');
+                        setIsUserMenuOpen(false);
+                      }}
+                      className="w-full text-left px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-100 transition cursor-pointer"
+                    >
+                      Order History & Proofs
+                    </button>
+                    <button
+                      onClick={() => {
+                        setIsSampleKitOpen(true);
+                        setIsUserMenuOpen(false);
+                      }}
+                      className="w-full text-left px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-100 transition cursor-pointer"
+                    >
+                      Request Free Sample Kit
+                    </button>
+                  </div>
+
+                  <div className="pt-2">
+                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                      Switch Test Account
+                    </div>
+                    <div className="space-y-1">
+                      {customers.map((c) => (
+                        <button
+                          key={c.id}
+                          onClick={() => {
+                            switchUser(c.id);
+                            setIsUserMenuOpen(false);
+                          }}
+                          className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded text-xs transition cursor-pointer ${
+                            currentUser.id === c.id
+                              ? 'bg-sky-50 text-sky-700 font-bold'
+                              : 'text-slate-600 hover:bg-slate-50'
+                          }`}
+                        >
+                          <span className="truncate">{c.name} ({c.company})</span>
+                          {currentUser.id === c.id && <CheckCircle2 className="w-3.5 h-3.5 text-sky-600" />}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          )}
 
           {/* Cart Icon with Red Badge (Matching Mockup) */}
           <button

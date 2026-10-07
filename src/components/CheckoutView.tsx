@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { usePrintStore } from '../context/PrintStore';
+import { useEditorMode } from '../utils/editorMode';
 import {
   CreditCard,
   Lock,
@@ -33,6 +34,8 @@ export const CheckoutView: React.FC<Props> = ({ onBackToCart }) => {
     setCurrentView,
     setSelectedOrderId
   } = usePrintStore();
+
+  const { isEditorMode } = useEditorMode();
 
   // Contact & Address info
   const [formData, setFormData] = useState({
@@ -152,7 +155,7 @@ export const CheckoutView: React.FC<Props> = ({ onBackToCart }) => {
           </div>
 
           {/* Proof notice */}
-          {orderComplete.proofs.length > 0 && (
+          {isEditorMode && orderComplete.proofs.length > 0 && (
             <div className="p-3 bg-sky-50 rounded-xl border border-sky-200 flex items-center justify-between text-xs">
               <div className="flex items-center space-x-2">
                 <FileCheck2 className="w-4 h-4 text-sky-600" />
@@ -175,20 +178,22 @@ export const CheckoutView: React.FC<Props> = ({ onBackToCart }) => {
 
         {/* Actions */}
         <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
-          <button
-            onClick={() => {
-              setSelectedOrderId(orderComplete.id);
-              setCurrentView('customer-dashboard');
-            }}
-            className="px-6 py-3.5 bg-slate-900 text-white font-extrabold text-xs rounded-xl hover:bg-slate-800 transition cursor-pointer"
-          >
-            Go to My Orders & Proofs
-          </button>
+          {isEditorMode && (
+            <button
+              onClick={() => {
+                setSelectedOrderId(orderComplete.id);
+                setCurrentView('customer-dashboard');
+              }}
+              className="px-6 py-3.5 bg-slate-900 text-white font-extrabold text-xs rounded-xl hover:bg-slate-800 transition cursor-pointer"
+            >
+              Go to My Orders & Proofs
+            </button>
+          )}
           <button
             onClick={() => {
               setCurrentView('catalog');
             }}
-            className="px-6 py-3.5 bg-sky-50 text-sky-700 border border-sky-200 font-extrabold text-xs rounded-xl hover:bg-sky-100 transition cursor-pointer"
+            className="px-6 py-3.5 bg-sky-600 text-white font-extrabold text-xs rounded-xl hover:bg-sky-500 transition cursor-pointer shadow-md"
           >
             Continue Shopping
           </button>

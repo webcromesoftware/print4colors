@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { PrintProvider, usePrintStore } from './context/PrintStore';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
@@ -15,6 +15,8 @@ import { CheckoutView } from './components/CheckoutView';
 import { QuoteRequestModal } from './components/QuoteRequestModal';
 import { SampleKitModal } from './components/SampleKitModal';
 import { ArtworkGuidelinesModal } from './components/ArtworkGuidelinesModal';
+import { EditorModeBadge } from './components/EditorModeBadge';
+import { useEditorMode } from './utils/editorMode';
 import { X, CheckCircle2, AlertCircle, Info } from 'lucide-react';
 
 const AppContent: React.FC = () => {
@@ -29,6 +31,15 @@ const AppContent: React.FC = () => {
     toasts,
     removeToast
   } = usePrintStore();
+
+  const { isEditorMode } = useEditorMode();
+
+  // If on public URL and currentView is a protected view, redirect to home
+  useEffect(() => {
+    if (!isEditorMode && (currentView === 'admin-panel' || currentView === 'customer-dashboard' || currentView === 'proof-review')) {
+      setCurrentView('home');
+    }
+  }, [isEditorMode, currentView, setCurrentView]);
 
   const activeProduct = products.find((p) => p.id === selectedProductId) || products[0];
   const activeOrder = orders.find((o) => o.id === selectedOrderId) || orders[0];
@@ -60,16 +71,20 @@ const AppContent: React.FC = () => {
           />
         )}
 
-        {currentView === 'customer-dashboard' && <CustomerDashboard />}
+        {currentView === 'customer-dashboard' && (isEditorMode ? <CustomerDashboard /> : <HomePage />)}
 
         {currentView === 'proof-review' && (
-          <ProofApprovalView
-            order={activeOrder}
-            onBack={() => setCurrentView('customer-dashboard')}
-          />
+          isEditorMode ? (
+            <ProofApprovalView
+              order={activeOrder}
+              onBack={() => setCurrentView('customer-dashboard')}
+            />
+          ) : (
+            <HomePage />
+          )
         )}
 
-        {currentView === 'admin-panel' && <AdminPanel />}
+        {currentView === 'admin-panel' && (isEditorMode ? <AdminPanel /> : <HomePage />)}
 
         {currentView === 'checkout' && (
           <CheckoutView onBackToCart={() => setCurrentView('catalog')} />
@@ -78,6 +93,9 @@ const AppContent: React.FC = () => {
 
       {/* Commercial Print Footer */}
       <Footer />
+
+      {/* Floating Editor Controls Badge (active in Editor / dev mode) */}
+      <EditorModeBadge />
 
       {/* Persistent Modals & Drawers */}
       <CartDrawer />

@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { usePrintStore } from '../context/PrintStore';
 import { Print4ColorsLogo } from './Print4ColorsLogo';
 import { supabaseDb, isSupabaseConfigured } from '../lib/supabase';
+import { useEditorMode } from '../utils/editorMode';
 import {
   ArrowRight,
   Instagram,
@@ -23,6 +24,30 @@ export const Footer: React.FC = () => {
 
   const [newsletterEmail, setNewsletterEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
+  const { toggleEditorMode } = useEditorMode();
+  const [clickCount, setClickCount] = useState(0);
+  const clickTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleCopyrightClick = () => {
+    setClickCount((prev) => {
+      const next = prev + 1;
+      if (clickTimerRef.current) clearTimeout(clickTimerRef.current);
+      if (next >= 4) {
+        const nextState = toggleEditorMode();
+        showToast(
+          nextState
+            ? 'Editor View Active: Admin & Account panels are now visible.'
+            : 'Team View Active: Admin & Account panels are hidden.',
+          'info'
+        );
+        return 0;
+      }
+      clickTimerRef.current = setTimeout(() => {
+        setClickCount(0);
+      }, 1500);
+      return next;
+    });
+  };
 
   const handleSubscribe = (e: React.FormEvent) => {
     e.preventDefault();
@@ -289,7 +314,11 @@ export const Footer: React.FC = () => {
       {/* Bottom Bar Matching Mockup */}
       <div className="border-t border-slate-800/80 py-5">
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
-          <div>
+          <div
+            onClick={handleCopyrightClick}
+            className="cursor-default select-none transition-colors hover:text-slate-400"
+            title="Print4Colors Commercial Print System"
+          >
             © {new Date().getFullYear()} Print4Colors. All rights reserved.
           </div>
           <div className="font-bold tracking-wider uppercase text-slate-400 text-[11px]">
